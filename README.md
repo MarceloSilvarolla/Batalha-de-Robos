@@ -1,3 +1,5 @@
+A compilação e execução requerem perl, JavaCC, javac e java instalados na máquina e acessíveis pela linha de comando.
+
 A inicialização do jogo é feita através de um script em Perl, o uso é:  
 perl joga.pl programa_em_alto_nivel numTimes numRobosPorTime numRodadas impressaoDaArenaNoTerminal  rodadasPorImpressao rodadasPorAtualizacaoDosGraficos queroLog [nomeArquivoSaida caminhoParaDiretorioDeArquivoSaida]
 
