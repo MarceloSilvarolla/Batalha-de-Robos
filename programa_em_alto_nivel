@@ -1,0 +1,32 @@
+func veBase (base, exercito) {
+   if ((base >= 0) * (base != exercito)) then {
+      while (meusCristais > 0) do {
+         depositaCristal;
+      }
+   }
+   return;
+}
+meuExerc = meuExercito;
+estado = 0;
+while (1) do {
+   while (estado == 0) do {
+      while ((cristaisAqui > 0) * (meusCristais < 9)) do {
+         pegaCristal;
+      }
+      veBase(baseAqui, meuExerc);
+      moveRand;
+      if (meusCristais > 2) then {
+         estado = 1;
+      }
+   }
+   while (estado == 1) do {
+      veBase(baseAqui, meuExerc);
+      movRand;
+      veBase(baseAqui, meuExerc);
+      movRand;
+      if (meusCristais == 0) then {
+         estado = 0;
+      }
+   }
+}
+

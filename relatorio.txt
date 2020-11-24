@@ -1,0 +1,46 @@
+Relatório EP4 - LABPROG II 
+
+Caio Lopes Demario 7991187
+Douglas Vasconcelos Cancherini 388323
+Marcelo Silvarolla 7991079
+
+
+Introdução
+
+O Javacc (Java Compiler Compiler) é um gerador de analisador sintático e léxico. Ele gera um analisador utilizando uma gramática em notação BNF, com saída em linguagem Java, utilizamos o Javacc em nosso EP para criarmos o compilador da nossa linguagem alto nível. Assim como qualquer compilador, a função do nosso compilador é traduzir um código fonte em alto nível para um código em baixo nível, que será utilizado pelos robôs do jogo. Assim, é possível programar os robôs em uma linguagem de alto nível, facilitando o processo.
+
+
+O Compilador
+
+   Nosso compilador está no diretório "compilador", constando de um arquivo compilador.jj e de algumas classes em Java (incluindo restos de uma máquina virtual desativada), os quais, após serem compilados eles mesmos, produzem um Compilador.class que lê da entrada padrão o código em alto nível e escreve na saída padrão código Java em formato virtualmente idêntico ao que era produzido pelo montador em Perl da fase 3. Para facilitarmos o seu uso, produzimos um "script" em Perl, descrito a seguir.
+
+
+Uso do "script" em Perl
+
+A inicialização do jogo é feita através de um script em Perl, o uso é:  
+perl joga.pl programa_em_alto_nivel numTimes numRobosPorTime numRodadas impressaoDaArenaNoTerminal  rodadasPorImpressao rodadasPorAtualizacaoDosGraficos queroLog [nomeArquivoSaida caminhoParaDiretorioDeArquivoSaida]
+
+onde,
+- programa_em_alto_nivel é o arquivo contendo código do programa em alto nível a ser compilado;
+- numTimes é o número de times no jogo, no mínimo 2 e no máximo 4;
+- numRobosPorTime é o número de robôs por time, no máximo 100;
+- numRodadas é o número de rodadas do jogo, 0 para infinito;
+- impressaoDaArenaNoTerminal decide se a arena será impressa no terminal. 0 para 'não' e 1 para 'sim';
+- rodadasPorImpressao é o número de rodadas entre atualizações da impressão da arena no terminal
+- rodadasPorAtualizacaoDosGraficos é o número de rodadas entre atualizações da impressão da arena no modo gráfico;
+- queroLog decide se será criado um arquivo de log. 0 para 'não' e 1 para 'sim';
+- nomeArquivoSaida é o nome que será dado ao arquivo de saída
+- caminhoParaDiretorioDeArquivoSaida é o diretório onde será salvo o arquivo de saída
+
+Obs. O par de campos entre colchetes somente deve ser incluído quando queroLog é 1.
+
+
+Alguns acréscimos à linguagem de alto nível
+
+   Dado o exemplo previamente disponibilizado de compilador, relativamente poucas características foram acrescentadas à nossa linguagem, constando quase todas elas relativas da incorporação de comandos e fatores especiais que permitam ao programa representar adequadamente a informação sobre o jogo. Foram incorporados três comandos, depositaCristal, moveRand e pegaCristal, bem como quatro fatores especiais: baseAqui, meusCristais, meuExercito e cristaisAqui. Conseguimos obter um programa que roda até levar à vitória (em geral rápida, por sinal) de um dos times, como foi nosso principal objetivo. Mas na verdade o programa atual é mais precário, de ponto de vista de inteligência artificial dos robôs (e também uso do eficiente dos recursos de cada exército para perseguir a vitória) que os construímos em assembly: não implementamos ataques ou movimentos direcionados. Os robôs simplesmente movem-se aleatoriamente pela Arena em busca de cristais para serem coletados e bases inimigas onde podem possam depositar cristais. A uma das poucas sutilizas do código atual é que o robô possuir dois estados, mantido numa variável "estado". No estado zero, o robô tem poucos cristais e privilegia encontrar mais cristais. No estado um, o robô julga que já tem cristais suficientes e privilegia encontrar bases inimigas.
+
+   Um mudança que fizemos na gramática e na semântica da linguagem foi que deixamos de manter na pilha o valor após atribuições. Isto porque tais valores estavam se acumulando indevidamente e levando a erros por pilha cheia (o membro de nosso grupo Douglas Cancherini postou a respeito no Paca). Isso porém faz com que atribuições deixem de retornar um valor que possa ser usado como expressão. Mesmo após esta mudança, porém, nosso programa, após cerca de 1500 a 2000 rodadas, começa a produzir reinicializações de robôs por erros relacionados a pilha cheia (ver no arquivo de log). Em contraposição, nossos dois programas em assembly usados na fase anterior (novamente enviados aqui, em dois_programas_em_assembly do diretório montador) rodavam por centenas de milhares de rodadas sem produzirem erros. O outro lado de moeda é que levamos bastante tempo para escrevermos os programas em assembly, enquanto que o programa_em_alto_nivel que ora usamos pôde ser escrito em questão de minutos.
+
+Mudanças na máquina virtual
+
+   Foi possivelmente onde gastamos mais tempo. Incorporamos poucas e importantes instruções, como CALL, RET, SETLV, PUSHLV e ENTRA, que permitiram a chamada a funções e o uso de variávies locais. Entretanto, havia algumas diferenças importantes entre o assembly que havíamos implementado em nossa máquina virtual e o assembly do exemplo disponibilizado, e a adaptação de um ao outro consumiu grande parte de nosso esforço. Uma pena, pois preferíamos ter nos concentrado no estudo do Javacc.

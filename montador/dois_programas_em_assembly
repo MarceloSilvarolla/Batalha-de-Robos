@@ -1,0 +1,364 @@
+# Primeiro programa
+PUSH 0
+ADR $TEM_POSICAO_VAZIA
+STO # inicialmente nenhuma posição vazia é conhecida
+PDVZ # pedimos uma vizinhança
+SHIFT # pedimos a primeira posição, que é a onde está o robô
+POP
+VRB 
+ADR $MEU_TIME
+STO # armazenamos numa posição de memória o número do exército do próprio robô
+POP # descartamos o resto da vizinhança
+LACO1: PDVZ # pedimos uma vizinhança
+SHIFT
+POP
+DUP
+VBA
+DUP
+ADR $MEU_TIME
+RCL
+NE
+SWAP
+PUSH -1
+NE
+MUL # descobrimos a posição em que o robô está tem base e a base é inimiga
+NCR
+MUL
+JIT DEPOSITA # se estamos em base inimiga e temos cristais, começamos a depositá-los
+OLHA_CRISTAL:
+VCR # procura cristal na posição atual
+JIT PEGA_CRISTAL
+LACO2: SHIFT # processa uma posição da vizinhança atual
+JIT PROCESSA_TERRENO
+ADR $TEM_POSICAO_VAZIA # se chegamos aqui, acabaram as posições vizinhas a processar
+RCL
+JIF LACO1 #desistimos de andar se não há posição vazia ao redor e atualizaremos o pedido de vizinhança
+ADR $POSICAO_VAZIA
+RCL
+MVRB # andamos para a primeira posição vazia que descobrimos
+     # não andaremos sempre na mesma direção porque o sistema retorna pseudoaleatoríamente a ordem das posições vizinhas em Vizinhança
+PUSH 0
+ADR $TEM_POSICAO_VAZIA
+STO
+JMP LACO1 #como mudamos de posição, voltamos pro início do laço que pede uma vizinhança
+
+DEPOSITA:
+DPCR
+NCR
+JIT DEPOSITA
+JMP OLHA_CRISTAL
+
+PROCESSA_TERRENO:
+DUP
+VRB
+DUP
+ADR $MEU_TIME
+RCL
+NE
+SWAP
+PUSH -1
+NE
+MUL
+JIT ATACA #detecta robôs de times inimigos em posições vizinhas e os ataca
+AINDA_PROCESSA: ADR $TEM_POSICAO_VAZIA
+RCL
+JIF DESCOBRE_VAZIO
+POP
+JMP LACO2 #voltamos para processar as demais posições vizinhas
+
+DESCOBRE_VAZIO:
+DUP
+VRB
+PUSH -1
+EQ
+JIT GUARDA_VAZIO # a primeira posição vazia descoberta é armazenada
+POP
+JMP LACO2
+
+GUARDA_VAZIO: # guarda na memória uma posição vazia que tenhamos encontrado, ...
+PTR
+ADR $POSICAO_VAZIA
+STO
+PUSH 1
+ADR $TEM_POSICAO_VAZIA # ...bem como a informação de que a encontramos!
+STO
+JMP LACO2
+
+ATACA: # ataca robôs inimigos encontrados
+DUP
+PTR
+ATCK
+JMP AINDA_PROCESSA
+
+PEGA_CRISTAL: # pega cristais detectados na posição atual
+PGCR
+JMP LACO2
+END
+
+# O segundo programa abaixo tem várias semelhanças com o primeiro
+# mas uma diferença significativa: periodicamente, ele escolhe uma
+# direção aleatória e anda um bom número de passos nesta direção
+# (entre 5 e 10 passos); por causa disso, ele também precisa
+# calcular as posições que estão na direção escolhida, o que em
+# assembly releva-se particularmente tedioso
+
+PUSH 0
+ADR $TEM_POSICAO_VAZIA
+STO
+PDVZ
+SHIFT
+POP
+VRB
+ADR $MEU_TIME
+STO
+POP
+LACO0: PUSH 5
+PUSH 10
+RAND
+ADR $NUM_PASSOS_FIXOS
+STO
+PUSH 3
+PUSH 6
+RAND
+ADR $NUM_PASSOS_ALEATORIOS
+STO
+PUSH 0
+PUSH 5
+RAND
+ADR $DIRECAO_FIXA
+STO
+LACO1: PDVZ
+SHIFT
+POP
+DUP
+PTR
+ADR $POSICAO_ATUAL
+STO
+DUP
+VBA
+DUP
+ADR $MEU_TIME
+RCL
+NE
+SWAP
+PUSH -1
+NE
+MUL
+NCR
+MUL
+JIT DEPOSITA
+OLHA_CRISTAL:VCR
+JIT PEGA_CRISTAL
+LACO2: SHIFT
+JIT PROCESSA_TERRENO
+ADR $NUM_PASSOS_FIXOS
+RCL
+DUP
+PUSH 1
+SUB
+ADR $NUM_PASSOS_FIXOS
+STO
+PUSH 0
+GT
+JIT PASSO_FIXO
+ADR $NUM_PASSOS_ALEATORIOS
+RCL
+DUP
+PUSH 1
+SUB
+ADR $NUM_PASSOS_ALEATORIOS
+STO
+PUSH 0
+GT
+JIF LACO0
+ADR $TEM_POSICAO_VAZIA
+RCL
+JIF LACO1
+ADR $POSICAO_VAZIA
+RCL
+MOVE_ROBO: MVRB
+PUSH 0
+ADR $TEM_POSICAO_VAZIA
+STO
+JMP LACO1
+DEPOSITA: DPCR
+NCR
+JIT DEPOSITA
+POP
+JMP LACO2
+PROCESSA_TERRENO: DUP
+VRB
+DUP
+ADR $MEU_TIME
+RCL
+NE
+SWAP
+PUSH -1
+NE
+MUL
+JIT ATACA
+AINDA_PROCESSA: ADR $TEM_POSICAO_VAZIA
+RCL
+JIF DESCOBRE_VAZIO
+POP
+JMP LACO2
+DESCOBRE_VAZIO: DUP
+VRB
+PUSH -1
+EQ
+JIT GUARDA_VAZIO
+POP
+JMP LACO2
+GUARDA_VAZIO: PTR
+ADR $POSICAO_VAZIA
+STO
+PUSH 1
+ADR $TEM_POSICAO_VAZIA
+STO
+JMP LACO2
+ATACA: DUP
+PTR
+ATCK
+JMP AINDA_PROCESSA
+PEGA_CRISTAL: PGCR
+POP
+JMP LACO1
+PASSO_FIXO: ADR $POSICAO_ATUAL
+RCL
+PSNM
+POP
+PUSH 2
+MOD
+ADR $PARIDADE_LINHA
+STO
+ADR $DIRECAO_FIXA
+RCL
+JIF DIRECAO0
+ADR $DIRECAO_FIXA
+RCL
+PUSH 1
+SUB
+JIF DIRECAO1
+ADR $DIRECAO_FIXA
+RCL
+PUSH 2
+SUB
+JIF DIRECAO2
+ADR $DIRECAO_FIXA
+RCL
+PUSH 3
+SUB
+JIF DIRECAO3
+ADR $DIRECAO_FIXA
+RCL
+PUSH 4
+SUB
+JIF DIRECAO4
+ADR $PARIDADE_LINHA 
+RCL
+JIF DIRECAO5_LINHAPAR
+ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH -1
+ADD
+SWAP
+PUSH -1
+ADD
+NMPS
+JMP MOVE_ROBO
+DIRECAO0: ADR $POSICAO_ATUAL
+RCL
+PSNM
+PUSH -1
+ADD
+NMPS
+JMP MOVE_ROBO
+DIRECAO1: ADR $PARIDADE_LINHA 
+RCL
+JIF DIRECAO1_LINHAPAR
+ADR $POSICAO_ATUAL
+RCL
+PSNM
+PUSH -1
+ADD
+SWAP
+PUSH 1
+ADD
+SWAP
+NMPS
+JMP MOVE_ROBO
+DIRECAO2: ADR $PARIDADE_LINHA 
+RCL
+JIF DIRECAO2_LINHAPAR
+ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH 1
+ADD
+SWAP
+NMPS
+JMP MOVE_ROBO
+DIRECAO3: ADR $POSICAO_ATUAL
+RCL
+PSNM
+PUSH 1
+ADD
+NMPS
+JMP MOVE_ROBO
+DIRECAO4: ADR $PARIDADE_LINHA 
+RCL
+JIF DIRECAO4_LINHAPAR
+ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH -1
+ADD
+SWAP
+NMPS
+JMP MOVE_ROBO
+DIRECAO1_LINHAPAR: ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH 1
+ADD
+SWAP
+NMPS
+JMP MOVE_ROBO
+DIRECAO2_LINHAPAR: ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH 1
+ADD
+SWAP
+PUSH 1
+ADD
+NMPS
+JMP MOVE_ROBO
+DIRECAO4_LINHAPAR: ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH -1
+ADD
+SWAP
+PUSH 1
+ADD
+NMPS
+JMP MOVE_ROBO
+DIRECAO5_LINHAPAR: ADR $POSICAO_ATUAL
+RCL
+PSNM
+SWAP
+PUSH -1
+ADD
+SWAP
+NMPS
+JMP MOVE_ROBO
+EOP
+
